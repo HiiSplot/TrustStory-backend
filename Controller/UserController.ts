@@ -1,16 +1,23 @@
-const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
-const UserModel = require('../models/userModel');
+import { Request, Response, Router } from 'express'
+import bcrypt from "bcrypt"
+import jwt from "jsonwebtoken"
+import { UserModel } from "../models/userModel"
+import { createUser } from '../Service/userService';
+import { okSuccessResponse } from '../Responses/success';
+import { sendUnknownErrorResponse } from '../Responses/error';
+import { pool } from '../config/db';
 
 const SECRET_KEY = process.env.JWT_SECRET || 'supersecretkey';
 
+export const UserController = Router();
+
 const AuthController = {
-  async signup(req, res) {
-    const { user, password, email, date } = req.body;
+  async signup(req: Request, res: Response) {
+    const { lastName, firstName, pseudo, password, email, date } = req.body;
     
     try {
       const hashedPassword = await bcrypt.hash(password, 10);
-      const userId = await UserModel.createUser(user, hashedPassword, email, date);
+      const userId = await UserModel.createUser(lastName, firstName, pseudo, hashedPassword, email, date);
       res.status(201).json({ message: 'Utilisateur créé avec succès !', userId });
     } catch (error) {
       console.error("Erreur lors de l'inscription :", error);
@@ -18,7 +25,7 @@ const AuthController = {
     }
   },
 
-  async login(req, res) {
+  async login(req: Request, res: Response) {
     const { user, password } = req.body;
 
     try {
@@ -46,7 +53,7 @@ const AuthController = {
   }
 };
 
-app.post('/login', async (req, res) => {
+UserController.post('/login', async (req, res) => {
   const { user, password } = req.body;
   
   try {
@@ -55,7 +62,7 @@ app.post('/login', async (req, res) => {
     const values = [user, user];
 
     // Utilisation du pool pour exécuter la requête
-    pool.query(query, values, (err, results) => {
+    pool.query(query, values, (err, results: Array<T>) => {
       if (err) {
         console.error("Erreur lors de la selection de l'utilisateur :", err);
         return res.status(500).json({ message: 'Une erreur est survenue lors dela tentative de connexion.' });
@@ -85,30 +92,15 @@ app.post('/login', async (req, res) => {
 });
 
 // Route d'inscription
-app.post('/signup', async (req, res) => {
-  const { firstName, lastName, pseudo, password, email, date } = req.body;
+UserController.post('/signup', async (req: Request, res: Response) => {
+  const { firstName, lastName, pseudo, password, email, date } = req.body
   const createdAt = new Date();
 
-  try {
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    const query = `
-      INSERT INTO users (firstname, lastname, pseudo, password, email, createdAt, birthday) 
-      VALUES (?, ?, ?, ?, ?, ?, ?)
-    `;
-    const values = [firstName, lastName, pseudo, hashedPassword, email, createdAt, date];
-
-    pool.query(query, values, (err, results) => {
-      if (err) {
-        console.error("Erreur lors de l'insertion de l'utilisateur :", err);
-        return res.status(500).json({ message: 'Une erreur est survenue lors de l\'inscription.' });
-      }
-
-      res.status(201).json({ message: 'Utilisateur créé avec succès !' });
-    });
-  } catch (error) {
-    console.error("Erreur lors du hachage du mot de passe :", error);
-    res.status(500).json({ message: 'Une erreur est survenue lors du traitement du mot de passe.' });
+  const result = await createUser(firstName, lastName, pseudo, password, email, createdAt, date, res)
+  if (result.status === 'success') {
+    okSuccessResponse(res, result.data, 201)
+  } else {
+    sendUnknownErrorResponse(res, result.error)
   }
 });
 

@@ -1,5 +1,10 @@
+import { Router } from "express";
+import pool from "../config/db";
+
+export const StoryController = Router();
+
 // Récupération des catégories
-app.get('/categories', async (req, res) => {
+StoryController.get('/categories', async (req, res) => {
   try {
     const query = 'SELECT * FROM categories';
     pool.query(query, (err, results) => {
@@ -17,7 +22,7 @@ app.get('/categories', async (req, res) => {
 });
 
 // Récupération des histoires
-app.get('/stories', async (req, res) => {
+StoryController.get('/stories', async (req, res) => {
   try {
     const query = 'SELECT * FROM stories';
     pool.query(query, (err, results) => {
@@ -35,7 +40,7 @@ app.get('/stories', async (req, res) => {
 });
 
 // Création d'une histoire
-app.post('/stories', async (req, res) => {
+StoryController.post('/stories', async (req, res) => {
   const { title, date, author, description, categoryId, userId } = req.body;
   try {
     const query = `INSERT INTO stories (title, date, author, description, category_id, user_id) VALUES (?, ?, ?, ?, ?, ?)`;
@@ -56,7 +61,7 @@ app.post('/stories', async (req, res) => {
 })
 
 // Récupération des histoires likées par l'utilisateur
-app.get('/stories/:userId', async (req, res) => {
+StoryController.get('/stories/:userId', async (req, res) => {
   const query = `SELECT * FROM favorites_stories WHERE id_story = ?`;
   const userId = req.params.userId;
 
@@ -71,7 +76,7 @@ app.get('/stories/:userId', async (req, res) => {
 });
 
 // Suppression d'une histoire
-app.delete('/stories/:storyId', async (req, res) => {
+StoryController.delete('/stories/:storyId', async (req, res) => {
   try {
     const { storyId } = req.params;
     
@@ -91,7 +96,7 @@ app.delete('/stories/:storyId', async (req, res) => {
 });
 
 // Récupération des histoires likées par l'utilisateur
-app.get('/stories/:storyId/:userId', async (req, res) => {
+StoryController.get('/stories/:storyId/:userId', async (req, res) => {
   const query = `SELECT * FROM favorites_stories WHERE id_story = ? AND id_user = ?`;
   const { storyId, userId } = req.params;
 
@@ -106,7 +111,7 @@ app.get('/stories/:storyId/:userId', async (req, res) => {
 });
 
 // Ajout d'une histoire en favoris
-app.post('/stories/:storyId/:userId', async (req, res) => {
+StoryController.post('/stories/:storyId/:userId', async (req, res) => {
   try {
     const { storyId, userId } = req.params;
     
@@ -126,7 +131,7 @@ app.post('/stories/:storyId/:userId', async (req, res) => {
 });
 
 // Suppression d'une histoire en favoris
-app.delete('/stories/:storyId/:userId', async (req, res) => {
+StoryController.delete('/stories/:storyId/:userId', async (req, res) => {
   try {
     const { storyId, userId } = req.params;
     

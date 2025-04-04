@@ -1,10 +1,13 @@
+import { Request, Response, Router } from "express"
+import { pool } from "../config/db"
+
+export const ProfilController = Router();
+
 // Récupération données profil
-app.get('/profil/:userId', async (req, res) => {
+ProfilController.get('/profil/:userId', async (req: Request, res: Response) => {
   try {
     const query = `SELECT id, firstname, lastname, pseudo, email, birthday FROM users WHERE id = ?`;
     const id = req.params.userId;
-    console.log(id);
-    
 
     pool.query(query, [id], (err, results) => {
       if (err) {
@@ -20,7 +23,7 @@ app.get('/profil/:userId', async (req, res) => {
 });
 
 // Récupération des favoris
-app.get('/profil/:userId/favorite', async (req, res) => {
+ProfilController.get('/profil/:userId/favorite', async (req, res) => {
   try {
     const query = `SELECT stories.id, title, date, author, description FROM stories INNER JOIN favorites_stories ON stories.id = favorites_stories.id_story WHERE favorites_stories.id_user = ?`;
     const userId = req.params.userId;
@@ -39,7 +42,7 @@ app.get('/profil/:userId/favorite', async (req, res) => {
 });
 
 // Récupération des histoires by user
-app.get('/profil/:userId/stories', async (req, res) => {
+ProfilController.get('/profil/:userId/stories', async (req, res) => {
   try {
     const query = `SELECT * FROM stories WHERE user_id = ?`;
     const userId = req.params.userId;

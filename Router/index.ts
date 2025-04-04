@@ -1,14 +1,18 @@
+import { UserController } from "../Controller/UserController";
+import { ProfilController } from "../Controller/ProfilController";
+import { StoryController } from "../Controller/StoryController";
+
 // index.js
 const express = require('express');
 const cors = require('cors');
 const app = express();
-const port = 3000;
+const port = process.env.PORT;
 require('dotenv').config();
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
 // Créer un pool de connexions MySQL
-const pool = require('./config/db');
+const pool = require('../config/db');
 
 const SECRET_KEY = process.env.JWT_SECRET || 'supersecretkey';
 
@@ -20,6 +24,11 @@ app.use(cors());
 app.get('/', (req, res) => {
   res.send('Hello from the backend!');
 });
+
+app.use(UserController)
+app.use(ProfilController)
+app.use(StoryController)
+
 app.post('/login', async (req, res) => {
   const { user, password } = req.body;
   
