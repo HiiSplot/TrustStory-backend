@@ -72,7 +72,7 @@ export const createStoryDB = async (storyData: DataStoryArray): ResponsePromise 
       VALUES (?, ?, ?, ?, ?, ?)
     `;
     const [result] = await pool.query(query, storyData);
-
+    
     return { status: 'success', data: result };
   } catch (error) {
     return { status: 'error', error };
