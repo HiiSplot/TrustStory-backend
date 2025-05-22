@@ -1,151 +1,135 @@
-import { Router } from "express";
-import pool from "../config/db";
+import { Request, Response, Router } from 'express'
+import { okSuccessResponse } from '../Responses/success';
+import { sendUnknownErrorResponse } from '../Responses/error';
+import { addStoryInFav, createStory, deleteStory, deleteStoryFromFav, getAllCategories, getAllStories, getCategoryById, getFavoriteByUser, getStoryById } from '../Service/storyService';
 
 export const StoryController = Router();
 
+export type DataStoryType = {
+  title: string;
+  date: Date;
+  author: string;
+  description?: string;
+  categoryId: number;
+  userId: number;
+}
+
+export type DataStoryArray = DataStoryType[]
+
 // Récupération des catégories
-StoryController.get('/categories', async (req, res) => {
-  try {
-    const query = 'SELECT * FROM categories';
-    pool.query(query, (err, results) => {
-      if (err) {
-        console.error("Erreur lors de la sélection des catégories :", err);
-        return res.status(500).json({ message: 'Une erreur est survenue lors de la récupération des catégories.' });
-      }
-      
-      res.json(results);
-    });
-  } catch (error) {
-    console.error("Erreur lors de la récupération des catégories :", error);
-    res.status(500).json({ message: 'Une erreur est survenue lors de la récupération des catégories.' });
+StoryController.get('/categories', async (req: Request, res: Response) => {
+  const result = await getAllCategories()
+
+  if (result.status === 'success') {
+    okSuccessResponse(res, result.data, 201)
+  } else {
+    sendUnknownErrorResponse(res, result.error)
   }
 });
 
-// Récupération des histoires
-StoryController.get('/stories', async (req, res) => {
-  try {
-    const query = 'SELECT * FROM stories';
-    pool.query(query, (err, results) => {
-      if (err) {
-        console.error("Erreur lors de la sélection des histoires :", err);
-        return res.status(500).json({ message: 'Une erreur est survenue lors de la récupération des histoires.' });
-      }
+StoryController.get('/categories/:categoryId', async (req: Request, res: Response) => {
+  const { categoryId } = req.params
+  const result = await getCategoryById(categoryId)
 
-      res.json(results);
-    });
-  } catch (error) {
-    console.error("Erreur lors de la récupération des histoires :", error);
-    res.status(500).json({ message: 'Une erreur est survenue lors de la récupération des histoires.' });
+  if (result.status === 'success') {
+    okSuccessResponse(res, result.data, 201)
+  } else {
+    sendUnknownErrorResponse(res, result.error)
+  }
+})
+
+// Récupération des histoires
+StoryController.get('/stories', async (req: Request, res: Response) => {
+  const { filters, value } = req.query;
+
+  let parsedFilters: number[] = [];
+  
+  if (filters) {
+    const filtersArray = Array.isArray(filters) ? filters : [filters];
+    parsedFilters = filtersArray.map(f => parseInt(f, 10)).filter(f => !isNaN(f));
+  }
+  
+  const result = await getAllStories(parsedFilters, value as string);
+
+  if (result.status === 'success') {
+    okSuccessResponse(res, result.data, 201)
+  } else {
+    sendUnknownErrorResponse(res, result.error)
+  }
+});
+
+// Récupération d'une histoire
+StoryController.get('/stories/:storyId', async (req: Request, res: Response) => {
+  const { storyId } =  req.params
+  const result = await getStoryById(storyId)
+
+  if (result.status === 'success') {
+    okSuccessResponse(res, result.data, 201)
+  } else {
+    sendUnknownErrorResponse(res, result.error)
   }
 });
 
 // Création d'une histoire
-StoryController.post('/stories', async (req, res) => {
+StoryController.post('/stories', async (req: Request, res: Response) => {
   const { title, date, author, description, categoryId, userId } = req.body;
-  try {
-    const query = `INSERT INTO stories (title, date, author, description, category_id, user_id) VALUES (?, ?, ?, ?, ?, ?)`;
-    const values = [title, date, author, description, categoryId, userId];
+  const values = [title, date, author, description, categoryId, userId]
+  const result = await createStory(values) 
 
-    pool.query(query, values, (err, results) => {
-      if (err) {
-        console.error("Erreur lors de l'insertion de l'histoire :", err);
-        return res.status(500).json({ message: 'Une erreur est survenue lors de la création de l\'histoire.' });
-      }
-
-      res.status(201).json({ message: 'Histoire créée avec succès !' });
-    });
-  } catch (error) {
-    console.error("Erreur lors de la création de l'histoire :", error);
-    res.status(500).json({ message: 'Une erreur est survenue lors de la création de l\'histoire.' });
+  if (result.status === 'success') {
+    okSuccessResponse(res, result.data, 201)
+  } else {
+    sendUnknownErrorResponse(res, result.error)
   }
 })
 
-// Récupération des histoires likées par l'utilisateur
-StoryController.get('/stories/:userId', async (req, res) => {
-  const query = `SELECT * FROM favorites_stories WHERE id_story = ?`;
-  const userId = req.params.userId;
-
-  pool.query(query, [userId], (err, results) => {
-    if (err) {
-      console.error("Erreur lors de la récupération des favoris :", err);
-      return res.status(500).json({ message: 'Erreur serveur' });
-    }
-
-    res.json(results);
-  });
-});
-
 // Suppression d'une histoire
-StoryController.delete('/stories/:storyId', async (req, res) => {
-  try {
-    const { storyId } = req.params;
-    
-    const query = `DELETE FROM stories WHERE id = ?`;
+StoryController.delete('/stories/:storyId', async (req: Request, res: Response) => {
+  const { storyId } = req.params;
+  const result = await deleteStory(storyId)
 
-    pool.query(query, [storyId], (err, results) => {
-      if (err) {
-        console.error("Erreur lors de la récupération des favoris :", err);
-        return res.status(500).json({ message: 'Erreur serveur' });
-      }
-
-      res.json(results);
-    });
-  } catch (error) {
-    res.status(500).json({ message: 'Erreur serveur' });
+  if (result.status === 'success') {
+    okSuccessResponse(res, result.data, 201)
+  } else {
+    sendUnknownErrorResponse(res, result.error)
   }
 });
 
-// Récupération des histoires likées par l'utilisateur
-StoryController.get('/stories/:storyId/:userId', async (req, res) => {
-  const query = `SELECT * FROM favorites_stories WHERE id_story = ? AND id_user = ?`;
+// Récupération de l'histoire likée par l'utilisateur
+StoryController.get('/stories/:storyId/:userId', async (req: Request, res: Response) => {
   const { storyId, userId } = req.params;
+  const values = [storyId, userId]
+  const result = await getFavoriteByUser(values)
 
-  pool.query(query, [storyId, userId], (err, results) => {
-    if (err) {
-      console.error("Erreur lors de la récupération des favoris :", err);
-      return res.status(500).json({ message: 'Erreur serveur' });
-    }
-
-    res.json(results);
-  });
+  if (result.status === 'success') {
+    okSuccessResponse(res, result.data, 201)
+  } else {
+    sendUnknownErrorResponse(res, result.error)
+  }
 });
 
 // Ajout d'une histoire en favoris
-StoryController.post('/stories/:storyId/:userId', async (req, res) => {
-  try {
+StoryController.post('/stories/:storyId/:userId', async (req: Request, res: Response) => {
     const { storyId, userId } = req.params;
-    
-    const query = `INSERT INTO favorites_stories (id_story, id_user) VALUES (?, ?)`;
+    const values = [storyId, userId]
+    const result = await addStoryInFav(values)
 
-    pool.query(query, [storyId, userId], (err, results) => {
-      if (err) {
-        console.error("Erreur lors de la récupération des favoris :", err);
-        return res.status(500).json({ message: 'Erreur serveur' });
-      }
-
-      res.json(results);
-    });
-  } catch (error) {
-    res.status(500).json({ message: 'Erreur serveur' });
-  }
+    if (result.status === 'success') {
+      okSuccessResponse(res, result.data, 201)
+    } else {
+      sendUnknownErrorResponse(res, result.error)
+    }
 });
 
-// Suppression d'une histoire en favoris
-StoryController.delete('/stories/:storyId/:userId', async (req, res) => {
-  try {
-    const { storyId, userId } = req.params;
-    
-    const query = `DELETE FROM favorites_stories WHERE id_story = ? AND id_user = ?`;
+// Suppression favori d'une histoire
+StoryController.delete('/stories/:storyId/:userId', async (req: Request, res: Response) => {
+  const { storyId, userId } = req.params;
+  const values = [storyId, userId]
+  const result = await deleteStoryFromFav(values)
 
-    pool.query(query, [storyId, userId], (err, results) => {
-      if (err) {
-        console.error("Erreur lors de la récupération des favoris :", err);
-        return res.status(500).json({ message: 'Erreur serveur' });
-      }
-
-      res.json(results);
-    });
-  } catch (error) {
-    res.status(500).json({ message: 'Erreur serveur' });
+  if (result.status === 'success') {
+    okSuccessResponse(res, result.data, 201)
+  } else {
+    sendUnknownErrorResponse(res, result.error)
   }
 });

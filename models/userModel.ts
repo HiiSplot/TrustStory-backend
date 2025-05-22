@@ -1,27 +1,36 @@
-import { Response } from "express";
+// models/UserModel.ts
 import { pool } from "../config/db";
+import { ResultSetHeader, RowDataPacket } from "mysql2";
+import { UserSignIn } from "../Controller/UserController";
+
+interface User extends RowDataPacket {
+  id: number;
+  firstName: string;
+  lastName: string;
+  pseudo: string;
+  email: string;
+  password: string;
+}
 
 export const UserModel = {
-  async login(user: string, password: string) {
-    const query = `SELECT * FROM users WHERE name = ? OR email = ?`;
-    const [rows] = await pool.query(query, [user, user]);  // Utilisation de await avec pool.query()
+  async findByNameOrEmail(user: string): Promise<User | null> {
+    const query = `SELECT * FROM users WHERE pseudo = ? OR email = ? LIMIT 1`;
+    const [rows] = await pool.query<User[]>(query, [user, user]);
 
-    return rows;  // Retourne les lignes (les résultats)
+    return rows.length > 0 ? rows[0] : null;
   },
 
   async createUser(
-    firstName: string,
-    lastName: string,
-    pseudo: string,
-    hashedPassword: string,
-    email: string,
-    date: string) {
+    userData: UserSignIn) {
+    const { firstName, lastName, pseudo, password, email, date } = userData
     const createdAt = new Date();
-    const query = `INSERT INTO users (name, password, email, createdAt, birthday) VALUES (?, ?, ?, ?, ?)`;
-    const [result] = await pool.query(query, [firstName, lastName, pseudo, hashedPassword, email, createdAt, date]);  // Utilisation de await
-
-    return result.insertId;  // Retourne l'ID du nouvel utilisateur
+    const query = `INSERT INTO users (firstName, lastName, pseudo, password, email, createdAt, birthday) VALUES (?, ?, ?, ?, ?)`;
+    const [result] = await pool.query<ResultSetHeader>(
+      query,
+      [firstName, lastName, pseudo, password, email, createdAt, date]
+    );
+    
+    return result.insertId;
   }
 };
 
-module.exports = UserModel;

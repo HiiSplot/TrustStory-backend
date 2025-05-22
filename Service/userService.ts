@@ -1,15 +1,15 @@
 import { Response } from 'express'
-import * as userRepository from '../Repository/userRepository'
+import { UserSignIn } from '../Controller/UserController';
+import { createUserDB, loginUserDB, ResponsePromise } from '../Repository/userRepository';
 
 export const createUser = async (
-  firstName: string,
-  lastName: string,
-  pseudo: string,
-  password: string,
-  email: string,
+  userData: UserSignIn,
   createdAt: Date,
-  date: string,
   res: Response
-): Promise<void> => {
-  return await userRepository.createdUser(firstName, lastName, pseudo, password, email, createdAt, date, res)
+): ResponsePromise => {
+  return await createUserDB(userData, createdAt, res)
+}
+
+export const loginUser = async (user: string, password: string, res: Response): ResponsePromise => {
+  return await loginUserDB(user, password, res)
 }

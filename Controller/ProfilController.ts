@@ -1,61 +1,43 @@
 import { Request, Response, Router } from "express"
-import { pool } from "../config/db"
+import { getAllDataUser, getAllFavorites, getAllUserStories } from "../Service/profilService";
+import { okSuccessResponse } from "../Responses/success";
+import { sendUnknownErrorResponse } from "../Responses/error";
 
 export const ProfilController = Router();
 
 // Récupération données profil
 ProfilController.get('/profil/:userId', async (req: Request, res: Response) => {
-  try {
-    const query = `SELECT id, firstname, lastname, pseudo, email, birthday FROM users WHERE id = ?`;
-    const id = req.params.userId;
+  const userId = req.params.userId;
+  const result = await getAllDataUser(userId)
 
-    pool.query(query, [id], (err, results) => {
-      if (err) {
-        console.error("Erreur lors de la récupération des données :", err);
-        return res.status(500).json({ message: 'Erreur serveur' });
-      }
-      
-      res.json(results[0]);
-    });
-  } catch (error) {
-    res.status(500).json({ message: 'Erreur serveur' });
+  if (result.status === 'success') {
+    okSuccessResponse(res, result.data, 201)
+  } else {
+    sendUnknownErrorResponse(res, result.error)
   }
 });
 
 // Récupération des favoris
-ProfilController.get('/profil/:userId/favorite', async (req, res) => {
-  try {
-    const query = `SELECT stories.id, title, date, author, description FROM stories INNER JOIN favorites_stories ON stories.id = favorites_stories.id_story WHERE favorites_stories.id_user = ?`;
-    const userId = req.params.userId;
+ProfilController.get('/profil/:userId/favorite', async (req: Request, res: Response) => {
 
-    pool.query(query, [userId], (err, results) => {
-      if (err) {
-        console.error("Erreur lors de la récupération des favoris :", err);
-        return res.status(500).json({ message: 'Erreur serveur' });
-      }
-      
-      res.json(results);
-    });
-  } catch (error) {
-    res.status(500).json({ message: 'Erreur serveur' });
+  const userId = req.params.userId;
+  const result = await getAllFavorites(userId)
+
+  if (result.status === 'success') {
+    okSuccessResponse(res, result.data, 201)
+  } else {
+    sendUnknownErrorResponse(res, result.error)
   }
 });
 
 // Récupération des histoires by user
-ProfilController.get('/profil/:userId/stories', async (req, res) => {
-  try {
-    const query = `SELECT * FROM stories WHERE user_id = ?`;
-    const userId = req.params.userId;
+ProfilController.get('/profil/:userId/stories', async (req: Request, res: Response) => {
+  const userId = req.params.userId;
+  const result = await getAllUserStories(userId)
 
-    pool.query(query, [userId], (err, results) => {
-      if (err) {
-        console.error("Erreur lors de la récupération des histoires :", err);
-        return res.status(500).json({ message: 'Erreur serveur' });
-      }
-      
-      res.json(results);
-    });
-  } catch (error) {
-    res.status(500).json({ message: 'Erreur serveur' });
+  if (result.status === 'success') {
+    okSuccessResponse(res, result.data, 201)
+  } else {
+    sendUnknownErrorResponse(res, result.error)
   }
 })
