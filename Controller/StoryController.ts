@@ -1,7 +1,7 @@
 import { Request, Response, Router } from 'express'
 import { okSuccessResponse } from '../Responses/success';
 import { sendUnknownErrorResponse } from '../Responses/error';
-import { addStoryInFav, createStory, deleteStory, deleteStoryFromFav, getAllCategories, getAllStories, getCategoryById, getFavoriteByUser, getStoryById } from '../Service/storyService';
+import { createStory, deleteStory, getAllCategories, getAllStories, getCategoryById, getStoryById } from '../Service/storyService';
 
 export const StoryController = Router();
 
@@ -87,45 +87,6 @@ StoryController.post('/stories', async (req: Request, res: Response) => {
 StoryController.delete('/stories/:storyId', async (req: Request, res: Response) => {
   const { storyId } = req.params;
   const result = await deleteStory(storyId)
-
-  if (result.status === 'success') {
-    okSuccessResponse(res, result.data, 201)
-  } else {
-    sendUnknownErrorResponse(res, result.error)
-  }
-});
-
-// Récupération de l'histoire likée par l'utilisateur
-StoryController.get('/stories/:storyId/:userId', async (req: Request, res: Response) => {
-  const { storyId, userId } = req.params;
-  const values = [storyId, userId]
-  const result = await getFavoriteByUser(values)
-
-  if (result.status === 'success') {
-    okSuccessResponse(res, result.data, 201)
-  } else {
-    sendUnknownErrorResponse(res, result.error)
-  }
-});
-
-// Ajout d'une histoire en favoris
-StoryController.post('/stories/:storyId/:userId', async (req: Request, res: Response) => {
-    const { storyId, userId } = req.params;
-    const values = [storyId, userId]
-    const result = await addStoryInFav(values)
-
-    if (result.status === 'success') {
-      okSuccessResponse(res, result.data, 201)
-    } else {
-      sendUnknownErrorResponse(res, result.error)
-    }
-});
-
-// Suppression favori d'une histoire
-StoryController.delete('/stories/:storyId/:userId', async (req: Request, res: Response) => {
-  const { storyId, userId } = req.params;
-  const values = [storyId, userId]
-  const result = await deleteStoryFromFav(values)
 
   if (result.status === 'success') {
     okSuccessResponse(res, result.data, 201)

@@ -13,7 +13,7 @@ export const getAllDataUserDB = async (userId: string): ResponsePromise => {
 
 export const getAllFavoritesDB = async (userId: string): ResponsePromise => {
   try {
-    const query = `SELECT stories.id, title, date, author, description, user_id FROM stories INNER JOIN favorites_stories ON stories.id = favorites_stories.id_story WHERE favorites_stories.id_user = ?`
+    const query = `SELECT * FROM stories INNER JOIN favorites_stories ON stories.id = favorites_stories.id_story WHERE favorites_stories.id_user = ?`
     const [result] = await pool.query(query, userId)
     return { status: 'success', data: result }
   } catch (error) {

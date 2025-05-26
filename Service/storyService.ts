@@ -1,5 +1,5 @@
 import { DataStoryArray } from "../Controller/StoryController"
-import { addStoryInFavDB, createStoryDB, deleteStoryDB, deleteStoryFromFavDB, getAllCategoriesDB, getAllStoriesDB, getCategoryByIdDB, getFavoriteByUserDB, getStoryByIdDB } from "../Repository/storyRepository"
+import { createStoryDB, deleteStoryDB, getAllCategoriesDB, getAllStoriesDB, getCategoryByIdDB, getStoryByIdDB } from "../Repository/storyRepository"
 import { ResponsePromise } from "../Repository/userRepository"
 
 export const getAllCategories = async (): ResponsePromise => {
@@ -27,16 +27,4 @@ export const createStory = async (storyData: DataStoryArray): ResponsePromise =>
 
 export const deleteStory = async (storyId: string): ResponsePromise => {
   return await deleteStoryDB(storyId)
-}
-
-export const getFavoriteByUser = async (values: string[]): ResponsePromise => {
-  return await getFavoriteByUserDB(values)
-}
-
-export const addStoryInFav = async (values: string[]): ResponsePromise => {
-  return await addStoryInFavDB(values)
-}
-
-export const deleteStoryFromFav = async (values: string[]): ResponsePromise => {
-  return await deleteStoryFromFavDB(values)
 }
