@@ -22,6 +22,8 @@ FavoriteController.get('/favorites/:storyId/:userId', async (req: Request, res: 
   const { storyId, userId } = req.params;
   const values = [storyId, userId]
   const result = await getFavoriteByUser(values)
+  console.log(result);
+  
 
   if (result.status === 'success') {
     okSuccessResponse(res, result.data, 201)
